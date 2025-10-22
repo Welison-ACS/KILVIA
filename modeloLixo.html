@@ -5,25 +5,21 @@
   <title>Acamados</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
-    /* -----------------------
-       Modelo ajustado conforme solicitado:
-       - colgroup personalizado (valores fornecidos por você)
-       - linhas mais finas e cor suave
-       - maior altura das linhas
-       - margem inferior reduzida
-       Ajuste rápido: procurar as variáveis/commented lines abaixo.
-       ----------------------- */
+    /* ----------------------------------------------
+       Modelo de impressão (A4 paisagem)
+       - Ajuste as larguras das colunas no <colgroup>
+       - Use table-layout: fixed para que os widths do colgroup sejam respeitados
+       - Padding, fontes e alturas podem ser ajustadas abaixo
+       ---------------------------------------------- */
 
     :root {
+      /* ajuste global de fonte/tamanho se necessário */
       --font-family: Arial, sans-serif;
       --titulo-bg: #c681c9;
       --titulo-color: #fff;
-      --titulo-font-size: 22px; /* ligeiramente menor para encaixar melhor */
-      --titulo-padding-x: 36px;
-      --titulo-padding-y: 8px;
-      --grid-color: #6b6b6b; /* cor das linhas da grade (suave) */
-      --grid-thin: 0.8px;    /* espessura das linhas (ajuste se necessário) */
-      --row-height: 38px;   /* altura das linhas (aumentei conforme pedido) */
+      --titulo-font-size: 24px;
+      --titulo-padding-x: 40px;
+      --titulo-padding-y: 10px;
     }
 
     html, body {
@@ -34,11 +30,9 @@
 
     body {
       font-family: var(--font-family);
-      /* margem do documento (topo | direita | bottom | esquerda).
-         Reduzi a margem inferior para aproveitar mais espaço:
-         - ajuste o 10px para outro valor se quiser mais/menos espaço embaixo */
-      margin: 20px 24px 10px 24px; /* top, right, bottom, left */
-      -webkit-print-color-adjust: exact;
+      /* margem do documento (em px) — ao gerar o PDF, esse espaço será respeitado */
+      margin: 40px;
+      -webkit-print-color-adjust: exact; /* garante cores na impressão */
     }
 
     .container {
@@ -52,9 +46,11 @@
       justify-content: center;
       align-items: center;
       position: relative;
-      margin-bottom: 12px; /* reduzi espaçamento abaixo do título */
+      margin-bottom: 20px;
     }
 
+    /* TITULO: usa inline-block para que o fundo (faixa) se ajuste ao texto.
+       Ajuste --titulo-font-size e padding conforme precisar. */
     .titulo {
       background-color: var(--titulo-bg);
       color: var(--titulo-color);
@@ -65,15 +61,15 @@
       text-align: center;
       z-index: 1;
       display: inline-block;
-      white-space: nowrap;
+      white-space: nowrap; /* mantém o título em uma linha; remova se quiser quebra automática */
     }
 
     .img-lateral {
-      width: 56px; /* ajuste do tamanho lateral para ficar mais proporcional */
+      width: 60px; /* altera tamanho das imagens laterais aqui, se necessário */
       height: auto;
       position: absolute;
       top: 0;
-      opacity: 0.95;
+      opacity: 0.9;
     }
 
     .img-lateral.esquerda {
@@ -86,44 +82,42 @@
 
     .imagem-central {
       position: absolute;
-      top: 160px; /* leve ajuste vertical */
+      top: 180px; /* posicione verticalmente conforme desejar */
       left: 50%;
       transform: translateX(-50%);
-      opacity: 0.07;
+      opacity: 0.07; /* opacidade do ícone central */
       z-index: 0;
       width: 100%;
       text-align: center;
-      pointer-events: none;
+      pointer-events: none; /* evita que imagem central afete seleção */
     }
 
     .imagem-central img {
-      max-width: 440px; /* um pouco maior para ficar similar ao exemplo */
+      max-width: 400px; /* ajuste o tamanho máximo da imagem central aqui */
       height: auto;
     }
 
-    /* TABELA */
+    /* TABELA
+       - table-layout: fixed faz com que as larguras definidas em <col> sejam respeitadas
+       - use <colgroup> (abaixo) para ajustar as larguras por coluna
+    */
     table {
       width: 100%;
       border-collapse: collapse;
       z-index: 1;
       position: relative;
-      table-layout: fixed;
+      table-layout: fixed; /* importante: respeita widths do colgroup */
       font-size: 13px;
     }
 
-    /* Colunas (valores informados por você) */
-    /* Ajuste esses percentuais conforme desejar */
-    colgroup col {
-      box-sizing: border-box;
-    }
-
+    /* Definições de colunas e células */
     thead th {
       background-color: var(--titulo-bg);
       color: white;
       padding: 8px;
       text-align: center;
-      font-size: 13px;
-      border: var(--grid-thin) solid var(--grid-color);
+      font-size: 14px;
+      border: 1px solid #000;
       box-sizing: border-box;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -131,38 +125,44 @@
     }
 
     td {
-      border: var(--grid-thin) solid var(--grid-color);
-      height: var(--row-height); /* altura aumentada */
-      padding: 6px 8px;
+      border: 1px solid #000;
+      height: 30px; /* altura das linhas: ajuste se quiser mais/menos espaço */
+      padding: 5px;
       box-sizing: border-box;
-      word-wrap: break-word;
+      word-wrap: break-word; /* permite quebra se necessário */
       overflow-wrap: break-word;
     }
 
+    /* opcional: estiliza as linhas para facilitar preenchimento à mão */
     tbody tr td {
       vertical-align: middle;
     }
 
-    /* impressão */
+    /* pequenas regras para impressão */
     @media print {
       body {
-        margin: 8mm; /* margem de impressão; altere se preferir */
+        margin: 10mm; /* margem ao imprimir, se desejar outro valor ajuste aqui */
       }
-      .imagem-central { opacity: 0.07; }
-      .img-lateral { opacity: 0.95; }
+      .img-lateral {
+        opacity: 0.95;
+      }
+      .imagem-central {
+        opacity: 0.07;
+      }
     }
 
-    /* DICAS:
-       - Para linhas ainda mais finas, reduza --grid-thin (ex: 0.6px).
-       - Para aumentar altura das linhas, mude --row-height.
-       - Para diminuir margem inferior, altere a 3ª posição no body{margin}.
-    */
+    /* -------------------------
+       INSTRUÇÕES RÁPIDAS:
+       - Altere as porcentagens no <colgroup> abaixo.
+       - Se preferir px, substitua "xx%" por "100px" etc.
+       - Confira que a soma das colunas fique perto de 100% quando usar %.
+       ------------------------- */
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <!-- Imagens serão substituídas dinamicamente pelo script (ex.: acamados.png) -->
+      <!-- As imagens abaixo serão substituídas dinamicamente pelo script (ex.: acamados.png) -->
       <img src="lateral.png" class="img-lateral esquerda" alt="Imagem lateral esquerda">
       <div class="titulo">ACAMADOS</div>
       <img src="lateral.png" class="img-lateral direita" alt="Imagem lateral direita">
@@ -172,12 +172,19 @@
       <img src="central.png" alt="Imagem central decorativa">
     </div>
 
+    <!--
+      Colgroup: ajuste aqui as larguras das colunas.
+      Exemplo atual (percentual):
+        28% | 16% | 12% | 6% | 20% | 18%
+      A soma ideal ~100% (pode haver pequenas variações).
+      Você pode usar px em vez de % se quiser tamanhos fixos.
+    -->
     <table>
       <colgroup>
         <col style="width: 28%;"> <!-- PACIENTE -->
         <col style="width: 16%;"> <!-- DATA DE NASCIMENTO -->
         <col style="width: 12%;"> <!-- CPF/SUS -->
-        <col style="width: 12%;"> <!-- ACS -->
+        <col style="width: 12%;">  <!-- ACS -->
         <col style="width: 20%;"> <!-- SITUAÇÃO DE SAÚDE -->
         <col style="width: 12%;"> <!-- ENDEREÇO -->
       </colgroup>
@@ -214,11 +221,11 @@
   </div>
 
   <!--
-    Ajustes rápidos:
-    - Linha da grade: --grid-thin (px) e --grid-color (cor)
-    - Altura das linhas: --row-height (px)
-    - Margem inferior: 3º valor de body{margin} (atualmente 10px)
-    - Tamanho do título: --titulo-font-size
+    DICAS RÁPIDAS:
+    - Para aumentar a largura da coluna "PACIENTE", aumente o valor do primeiro <col> (ex: 32%) e reduza outro;
+    - Se preferir px fixo: <col style="width: 320px;">
+    - Se a tabela não obedecer widths: verifique se há conteúdo muito longo nas células (use word-break/overflow-wrap);
+    - Após editar, teste gerando o PDF pelo botão na interface principal para ver resultado real.
   -->
 </body>
 </html>
