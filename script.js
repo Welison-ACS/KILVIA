@@ -1,4 +1,4 @@
-// script.js (versão corrigida - renderiza modelo.html inteiro dentro de um iframe e converte sem deformar)
+// script.js (corrigido: usa <base> para preservar caminhos relativos e logs melhores)
 document.addEventListener("DOMContentLoaded", () => {
   const tipoSelect = document.getElementById("tipo");
   const preview = document.getElementById("preview");
@@ -11,17 +11,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   gerarBtn.addEventListener("click", async () => {
     const tipo = tipoSelect.value;
-
     gerarBtn.disabled = true;
     gerarBtn.textContent = "Gerando PDF...";
 
     try {
-      // 1) Carrega o modelo.html (inclui <head> com estilos)
+      // 1) Carrega o modelo.html
       const resp = await fetch("modelo.html");
-      if (!resp.ok) throw new Error("Não foi possível carregar modelo.html");
+      if (!resp.ok) throw new Error(`Não foi possível carregar modelo.html (status ${resp.status})`);
       const rawHtml = await resp.text();
 
-      // 2) Parseia e modifica o HTML (título + imagens)
+      // 2) Parseia para manipular título e imagens
       const parser = new DOMParser();
       const doc = parser.parseFromString(rawHtml, "text/html");
 
@@ -30,8 +29,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (tituloDiv) {
         const tipoUpper = tipo.toUpperCase();
         tituloDiv.textContent = tipoUpper;
-
-        // ajuste simples do padding/size baseado no comprimento
         tituloDiv.style.padding = "10px 40px";
         if (tipoUpper.length > 9) {
           tituloDiv.style.fontSize = "20px";
@@ -41,17 +38,34 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      // Substitui imagens laterais / centrais por <tipo>.png
+      // Substitui imagens laterais e central
       const imgsLaterais = doc.querySelectorAll(".img-lateral");
       imgsLaterais.forEach(img => img.setAttribute("src", `${tipo}.png`));
-
       const imgCentral = doc.querySelector(".imagem-central img");
       if (imgCentral) imgCentral.setAttribute("src", `${tipo}.png`);
 
-      // 3) Cria iframe oculto e injeta o documento completo (head + body)
+      // 3) Gera <base> para manter caminhos relativos corretos dentro do iframe
+      // baseHref = pasta atual onde index.html está (ex: http://localhost:5500/)
+      const loc = window.location;
+      const path = loc.pathname.substring(0, loc.pathname.lastIndexOf("/") + 1);
+      const baseHref = `${loc.protocol}//${loc.host}${path}`;
+      const baseEl = doc.createElement("base");
+      baseEl.setAttribute("href", baseHref);
+      // injeta no <head> do documento (cria um head se não existir)
+      if (!doc.head) {
+        const head = doc.createElement("head");
+        head.appendChild(baseEl);
+        doc.documentElement.insertBefore(head, doc.body);
+      } else {
+        doc.head.insertBefore(baseEl, doc.head.firstChild);
+      }
+
+      // 4) Serializa o documento completo
+      const fullHtml = "<!doctype html>\n" + doc.documentElement.outerHTML;
+
+      // 5) Cria iframe oculto (A4 paisagem aproximado em px a 96dpi)
       const iframe = document.createElement("iframe");
-      // A4 paisagem aproximado em px a 96dpi: 297mm x 96 / 25.4 ≈ 1123px ; 210mm -> ≈ 794px
-      const iframeWidthPx = 1123;
+      const iframeWidthPx = 1123; // aprox A4 landscape @96dpi
       const iframeHeightPx = 794;
 
       iframe.style.position = "fixed";
@@ -60,28 +74,33 @@ document.addEventListener("DOMContentLoaded", () => {
       iframe.style.width = iframeWidthPx + "px";
       iframe.style.height = iframeHeightPx + "px";
       iframe.style.border = "0";
-      iframe.sandbox = ""; // manter permissões padrão (srcdoc same-origin)
-      // serializa o documento inteiro (inclui <head> com <style>)
-      const fullHtml = doc.documentElement.outerHTML;
-      // use srcdoc para injetar o HTML completo no iframe
+      // NÃO definir sandbox (pode bloquear recursos). Se quiser restringir, usar atributos específicos.
       iframe.srcdoc = fullHtml;
-
       document.body.appendChild(iframe);
 
-      // 4) espera o iframe carregar completamente e todas as imagens dentro dele
+      // 6) Espera o iframe carregar e imagens serem carregadas
       await new Promise((resolve, reject) => {
+        let done = false;
+        const timeoutMs = 12000; // tempo maior
+        const timer = setTimeout(() => {
+          if (!done) {
+            done = true;
+            reject(new Error("Timeout carregando iframe (verifique console/network)."));
+          }
+        }, timeoutMs);
+
         iframe.onload = async () => {
           try {
             const ifdoc = iframe.contentDocument || iframe.contentWindow.document;
 
-            // força o tamanho do body/html interno para a mesma dimensão (evita "auto" que pode quebrar layout)
+            // garante dimensões internas fixas para evitar auto-resize
             ifdoc.documentElement.style.width = iframeWidthPx + "px";
             ifdoc.body.style.width = iframeWidthPx + "px";
             ifdoc.documentElement.style.height = iframeHeightPx + "px";
             ifdoc.body.style.height = iframeHeightPx + "px";
-            ifdoc.body.style.margin = "0"; // garante sem margens extras
+            ifdoc.body.style.margin = "0";
 
-            // espera todas imagens do iframe carregarem
+            // espera todas as imagens do iframe carregarem (ou erro)
             const imgs = Array.from(ifdoc.images || []);
             await Promise.all(imgs.map(img => {
               return new Promise(res => {
@@ -90,27 +109,31 @@ document.addEventListener("DOMContentLoaded", () => {
               });
             }));
 
-            // aguarda um pouquinho para garantir estilos aplicados/render completos
-            setTimeout(resolve, 120);
-          } catch (e) {
-            reject(e);
+            // delay pequeno para estilos recalcularem
+            setTimeout(() => {
+              if (!done) {
+                done = true;
+                clearTimeout(timer);
+                resolve();
+              }
+            }, 150);
+          } catch (err) {
+            if (!done) {
+              done = true;
+              clearTimeout(timer);
+              reject(err);
+            }
           }
         };
-        // caso o iframe não carregue por algum motivo
-        setTimeout(() => reject(new Error("Timeout carregando iframe")), 8000);
       });
 
-      // 5) captura o conteúdo do iframe com html2canvas
-      const ifWindow = iframe.contentWindow;
-      const ifDoc = iframe.contentDocument || ifWindow.document;
+      // 7) Captura com html2canvas
+      const ifDoc = iframe.contentDocument || iframe.contentWindow.document;
       const targetEl = ifDoc.body;
-
-      // configuração de scale (aumenta qualidade do raster)
-      const scale = 2; // <--- ajuste para mais qualidade (maior) ou menos (menor)
+      const scale = 2; // ajuste de qualidade (aumente para melhor resolução)
       const canvas = await html2canvas(targetEl, {
         scale: scale,
         useCORS: true,
-        // limitar o tamanho do canvas ao tamanho do iframe para evitar capturas extras
         width: iframeWidthPx,
         height: iframeHeightPx,
         windowWidth: iframeWidthPx,
@@ -118,60 +141,43 @@ document.addEventListener("DOMContentLoaded", () => {
         logging: false
       });
 
-      // 6) converte dimensões do canvas (px) para mm corretamente para inserir no jsPDF
-      // Conversão: 1 polegada = 25.4 mm ; DPI considerar 96 CSS px por polegada.
-      // Lembre: canvas.width = cssPx * scale
+      // 8) Converte px->mm levando em conta 'scale' e DPI (assume 96 CSS px / inch)
       const dpi = 96;
       const pxToMm = 25.4 / (dpi * scale); // mm por canvas-pixel
-
       const imgWidthPx = canvas.width;
       const imgHeightPx = canvas.height;
-
       const imgWidthMm = imgWidthPx * pxToMm;
       const imgHeightMm = imgHeightPx * pxToMm;
 
-      // 7) cria PDF A4 paisagem e calcula escala para caber sem deformar
       const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF({
-        orientation: "landscape",
-        unit: "mm",
-        format: "a4"
-      });
-
+      const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
       const pageW = pdf.internal.pageSize.getWidth();
       const pageH = pdf.internal.pageSize.getHeight();
 
-      // ---- MARGENS (ajuste facilmente aqui) ----
-      const margemX = 5; // mm - ajuste horizontal
-      const margemY = 5; // mm - ajuste vertical
-      // -------------------------------------------
+      // MARGENS (mm) - ajuste facilmente aqui
+      const margemX = 5;
+      const margemY = 5;
 
       const maxW = pageW - margemX * 2;
       const maxH = pageH - margemY * 2;
-
-      // escala proporcional sem deformar
       const scaleRatio = Math.min(maxW / imgWidthMm, maxH / imgHeightMm);
-
       const finalW = imgWidthMm * scaleRatio;
       const finalH = imgHeightMm * scaleRatio;
-
       const posX = (pageW - finalW) / 2;
       const posY = (pageH - finalH) / 2;
 
       const imgData = canvas.toDataURL("image/png");
-
-      // 8) adiciona imagem ao PDF (as dimensões aqui são em mm)
       pdf.addImage(imgData, "PNG", posX, posY, finalW, finalH);
 
-      // 9) baixa o PDF com nome simples
       pdf.save(`${tipo}.pdf`);
 
-      // limpa iframe
+      // remove iframe
       document.body.removeChild(iframe);
 
     } catch (err) {
-      console.error(err);
-      alert("Erro ao gerar PDF. Veja o console para detalhes.");
+      console.error("Erro ao gerar PDF:", err);
+      alert("Erro ao gerar PDF. Veja o console (F12) para detalhes: " + (err && err.message ? err.message : err));
+      // habilita botão novamente
       gerarBtn.disabled = false;
       gerarBtn.textContent = "Gerar PDF";
       return;
