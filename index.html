@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de PDFs - Agentes de Saúde</title>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- jsPDF e html2canvas via CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Gerador de PDFs - Agentes de Saúde</h1>
+
+        <label for="tipo">Selecione o modelo:</label>
+        <select id="tipo">
+            <option value="acamados">Acamados</option>
+            <option value="idosos">Idosos</option>
+            <option value="criancas">Crianças</option>
+            <option value="gestantes">Gestantes</option>
+        </select>
+
+        <div class="preview-container">
+            <h2>Pré-visualização</h2>
+            <img id="preview" src="acamados.png" alt="Prévia do modelo">
+        </div>
+
+        <button id="gerar">Gerar PDF</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

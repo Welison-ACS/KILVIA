@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Acamados</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background: #fff;
+    }
+
+    .container {
+      width: 100%;
+      position: relative;
+    }
+
+    .header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .titulo {
+      background-color: #c681c9;
+      color: white;
+      font-weight: bold;
+      font-size: 24px;
+      padding: 10px 40px;
+      border-radius: 20px;
+      text-align: center;
+      z-index: 1;
+    }
+
+    .img-lateral {
+      width: 60px;
+      height: auto;
+      position: absolute;
+      top: 0;
+      opacity: 0.9;
+    }
+
+    .img-lateral.esquerda {
+      left: 0;
+    }
+
+    .img-lateral.direita {
+      right: 0;
+    }
+
+    .imagem-central {
+      position: absolute;
+      top: 180px;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0.07;
+      z-index: 0;
+      width: 100%;
+      text-align: center;
+    }
+
+    .imagem-central img {
+      max-width: 400px;
+      height: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      z-index: 1;
+      position: relative;
+    }
+
+    thead th {
+      background-color: #c681c9;
+      color: white;
+      padding: 8px;
+      text-align: center;
+      font-size: 14px;
+      border: 1px solid #000;
+    }
+
+    td {
+      border: 1px solid #000;
+      height: 30px;
+      padding: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="lateral.png" class="img-lateral esquerda" alt="Imagem lateral esquerda">
+      <div class="titulo">ACAMADOS</div>
+      <img src="lateral.png" class="img-lateral direita" alt="Imagem lateral direita">
+    </div>
+
+    <div class="imagem-central">
+      <img src="central.png" alt="Imagem central decorativa">
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>PACIENTE</th>
+          <th>DATA DE NASCIMENTO</th>
+          <th>CPF/SUS</th>
+          <th>ACS</th>
+          <th>SITUAÇÃO DE SAÚDE</th>
+          <th>ENDEREÇO</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- 15 linhas -->
+        <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>
